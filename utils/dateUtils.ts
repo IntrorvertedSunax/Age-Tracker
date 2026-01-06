@@ -97,36 +97,34 @@ export const getDaysUntil = (targetDate: Date): number => {
 
 export const getFormattedDurationUntil = (targetDate: Date): string => {
   const now = new Date();
-  if (targetDate <= now) return "Passed";
+  // Normalize to start of day to ignore hours/minutes
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const end = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
 
-  // Normalize to start of day to calculate calendar difference
-  const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+  if (end <= start) return "Passed";
 
-  let years = endDate.getFullYear() - startDate.getFullYear();
-  let months = endDate.getMonth() - startDate.getMonth();
-  let days = endDate.getDate() - startDate.getDate();
+  let years = end.getFullYear() - start.getFullYear();
+  
+  // Create anniversary date in the target year to check if the year is fully completed
+  // Using setFullYear handles leap years automatically (rolls to Mar 1 if Feb 29 doesn't exist)
+  let anniversary = new Date(start.getTime());
+  anniversary.setFullYear(start.getFullYear() + years);
 
-  if (days < 0) {
-    // Borrow days from previous month of targetDate
-    const prevMonthDate = new Date(endDate.getFullYear(), endDate.getMonth(), 0);
-    days += prevMonthDate.getDate();
-    months--;
-  }
-
-  if (months < 0) {
-    months += 12;
+  // If anniversary is in the future relative to end date, we haven't completed that full year yet
+  if (anniversary > end) {
     years--;
+    anniversary = new Date(start.getTime());
+    anniversary.setFullYear(start.getFullYear() + years);
   }
+
+  // Calculate remaining days between last completed anniversary and end date
+  const diffTime = end.getTime() - anniversary.getTime();
+  const days = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
   const parts: string[] = [];
   
   if (years > 0) {
     parts.push(`${years} ${years === 1 ? 'Year' : 'Years'}`);
-  }
-  
-  if (months > 0) {
-    parts.push(`${months} ${months === 1 ? 'Month' : 'Months'}`);
   }
   
   if (days > 0) {

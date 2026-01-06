@@ -61,7 +61,7 @@ const ResponsiveCircularUnit: React.FC<{
     const progress = Math.min(value / maxValue, 1);
     const dashOffset = circumference - progress * circumference;
     
-    // Default text size if not provided - SCALED UP
+    // Default text size if not provided
     const valueTextClass = textSize || "text-lg sm:text-xl md:text-2xl";
 
     return (
@@ -96,7 +96,6 @@ const ResponsiveCircularUnit: React.FC<{
                 <span className={`${valueTextClass} font-bold text-slate-700 font-mono tracking-tighter`}>
                     {value.toString().padStart(2, '0')}
                 </span>
-                {/* SCALED UP LABEL */}
                 <span className={`text-[0.6rem] sm:text-[0.7rem] md:text-[0.8rem] uppercase font-bold tracking-widest ${themeColors[theme]} opacity-80 mt-0.5`}>
                     {label}
                 </span>
@@ -131,8 +130,7 @@ const AgeTimer: React.FC<AgeTimerProps> = ({ birthDate, theme }) => {
     <div className="w-full">
       
       {/* Line 1: Header / Present Date Label */}
-      <div className="flex flex-col justify-start items-start mb-6 pb-4 border-b border-slate-100 gap-1">
-         {/* SCALED UP HEADER */}
+      <div className="flex flex-col justify-start items-start mb-2 pb-2 border-b border-slate-100 gap-1">
          <span className={`text-xs md:text-sm font-bold uppercase tracking-widest ${themeColors[theme]}`}>Present Date</span>
          <div className="flex flex-wrap items-baseline">
             <span className="text-lg md:text-xl font-bold text-slate-800">
@@ -142,8 +140,7 @@ const AgeTimer: React.FC<AgeTimerProps> = ({ birthDate, theme }) => {
       </div>
 
       {/* Line 2: Live Age Label */}
-      <div className="flex justify-start w-full mb-2">
-         {/* SCALED UP HEADER */}
+      <div className="flex justify-start w-full mb-1">
          <span className={`text-sm md:text-base font-bold uppercase tracking-widest ${themeColors[theme]}`}>Live Age</span>
       </div>
 
@@ -152,10 +149,8 @@ const AgeTimer: React.FC<AgeTimerProps> = ({ birthDate, theme }) => {
         
         {/* Years - Filled Circle, White Text, Glow Effect */}
         <div className="flex flex-col items-center justify-center py-4">
-             {/* Removed border-4 border-white, added glowClass */}
              <div className={`w-32 h-32 md:w-40 md:h-40 rounded-full ${bgColorClass} flex items-center justify-center ${glowClass}`}>
                  <div className="flex flex-col items-center justify-center">
-                    {/* Font SCALED UP (5xl/6xl) and made BOLD/BLACK */}
                     <span className="text-5xl md:text-6xl text-white font-black tracking-tighter leading-none mb-1">
                         {age.years}
                     </span>
@@ -166,22 +161,48 @@ const AgeTimer: React.FC<AgeTimerProps> = ({ birthDate, theme }) => {
              </div>
         </div>
 
-        {/* Other Units - Single Line Grid */}
-        <div className="grid grid-cols-5 gap-2 md:gap-4 w-full px-1">
-            <div className="aspect-square">
-                <ResponsiveCircularUnit value={age.months} maxValue={12} label="MOS" theme="blue" strokeWidth={10} />
+        {/* 
+           Responsive Layout:
+           Mobile: "Triangle/Pyramid" shape. 
+                  Top Row: Months & Days (Constrained width to match size of bottom row items).
+                  Bottom Row: Hours, Min, Sec (Full width).
+           Desktop: Single row.
+        */}
+        <div className="flex flex-col items-center gap-3 md:grid md:grid-cols-5 md:gap-4 w-full px-1">
+            
+            {/* Row 1 on Mobile: Months & Days. Width constrained to ~2/3 (w-[68%]) to make items similar size to the 3-col grid below */}
+            <div className="grid grid-cols-2 gap-3 w-[68%] mx-auto md:w-full md:contents">
+                <div className="aspect-square">
+                    <ResponsiveCircularUnit 
+                        value={age.months} 
+                        maxValue={12} 
+                        label="MOS" 
+                        theme="blue" 
+                        strokeWidth={10} 
+                    />
+                </div>
+                <div className="aspect-square">
+                    <ResponsiveCircularUnit 
+                        value={age.days} 
+                        maxValue={daysInMonth} 
+                        label="DAYS" 
+                        theme="purple" 
+                        strokeWidth={10} 
+                    />
+                </div>
             </div>
-            <div className="aspect-square">
-                <ResponsiveCircularUnit value={age.days} maxValue={daysInMonth} label="DAYS" theme="purple" strokeWidth={10} />
-            </div>
-            <div className="aspect-square">
-                <ResponsiveCircularUnit value={age.hours} maxValue={24} label="HRS" theme="rose" strokeWidth={10} />
-            </div>
-            <div className="aspect-square">
-                <ResponsiveCircularUnit value={age.minutes} maxValue={60} label="MIN" theme="orange" strokeWidth={10} />
-            </div>
-            <div className="aspect-square">
-                <ResponsiveCircularUnit value={age.seconds} maxValue={60} label="SEC" theme="lime" strokeWidth={10} />
+
+            {/* Row 2 on Mobile: Hours, Min, Sec (Full width base) */}
+            <div className="grid grid-cols-3 gap-3 w-full md:contents">
+                <div className="aspect-square">
+                    <ResponsiveCircularUnit value={age.hours} maxValue={24} label="HRS" theme="rose" strokeWidth={10} />
+                </div>
+                <div className="aspect-square">
+                    <ResponsiveCircularUnit value={age.minutes} maxValue={60} label="MIN" theme="orange" strokeWidth={10} />
+                </div>
+                <div className="aspect-square">
+                    <ResponsiveCircularUnit value={age.seconds} maxValue={60} label="SEC" theme="lime" strokeWidth={10} />
+                </div>
             </div>
         </div>
       </div>

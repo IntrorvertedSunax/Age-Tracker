@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { formatDate, getFormattedDurationUntil, getDaysUntil } from '../utils/dateUtils';
+import { formatDate, getFormattedDurationUntil } from '../utils/dateUtils';
 import { ClockIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export type ThemeColor = 'teal' | 'orange' | 'purple' | 'blue' | 'rose' | 'indigo' | 'lime';
@@ -12,7 +12,6 @@ interface BirthdayCardProps {
   theme: ThemeColor;
   progress?: number; // 0 to 100
   onRemove?: () => void;
-  useDaysOnly?: boolean;
 }
 
 const themeStyles: Record<ThemeColor, { 
@@ -96,31 +95,22 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({
   age, 
   theme, 
   progress = 0, 
-  onRemove, 
-  useDaysOnly = false 
+  onRemove
 }) => {
-  const getTimeLeft = () => {
-    if (useDaysOnly) {
-      const days = getDaysUntil(date);
-      return `${days} ${days === 1 ? 'Day' : 'Days'}`;
-    }
-    return getFormattedDurationUntil(date);
-  };
-
-  const [timeLeft, setTimeLeft] = useState(showCountdown ? getTimeLeft() : '');
+  const [timeLeft, setTimeLeft] = useState(showCountdown ? getFormattedDurationUntil(date) : '');
   const styles = themeStyles[theme];
 
   useEffect(() => {
     if (showCountdown) {
       // Initial update
-      setTimeLeft(getTimeLeft());
+      setTimeLeft(getFormattedDurationUntil(date));
       
       const timer = setInterval(() => {
-        setTimeLeft(getTimeLeft());
+        setTimeLeft(getFormattedDurationUntil(date));
       }, 60000); 
       return () => clearInterval(timer);
     }
-  }, [date, showCountdown, useDaysOnly]);
+  }, [date, showCountdown]);
 
   return (
     <div className={`bg-white rounded-2xl shadow-sm border ${styles.border} relative overflow-hidden transition-all hover:shadow-md group`}>

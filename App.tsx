@@ -106,7 +106,6 @@ const App: React.FC = () => {
             age={nextBirthdayAge}
             theme="orange"
             progress={nextBirthdayProgress}
-            useDaysOnly={true}
           />
         </section>
 
