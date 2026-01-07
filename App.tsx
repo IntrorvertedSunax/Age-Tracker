@@ -1,15 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import AgeTimer from './components/AgeTimer';
 import BirthdayCard from './components/BirthdayCard';
-import { getLastBirthday, getNextBirthday, getMilestoneBirthday } from './utils/dateUtils';
-import { CalendarIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { getLastBirthday, getNextBirthday, getMilestoneBirthday, formatDate } from './utils/dateUtils';
+import { CalendarIcon, PlusIcon, XMarkIcon, UserIcon, ClockIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+
+interface UserData {
+  name: string;
+  birthDate: Date;
+}
 
 const App: React.FC = () => {
-  // Hardcoded birth date: 25 October 1998 5:30 AM
-  const [birthDate] = useState<Date>(new Date('1998-10-25T05:30:00'));
+  // State for User Data (Name & Birth Date)
+  const [userData, setUserData] = useState<UserData | null>(() => {
+    try {
+      const saved = localStorage.getItem('life-tracker-user-data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          name: parsed.name,
+          birthDate: new Date(parsed.birthDate)
+        };
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  // Form State for Onboarding
+  const [formName, setFormName] = useState('');
+  const [formDate, setFormDate] = useState('');
+  const [formTime, setFormTime] = useState('00:00');
+
   const [now, setNow] = useState(new Date());
 
-  // Dynamic Milestones State - Initialize from LocalStorage
+  // Dynamic Milestones State
   const [milestones, setMilestones] = useState<number[]>(() => {
     try {
       const saved = localStorage.getItem('life-tracker-milestones');
@@ -23,16 +48,165 @@ const App: React.FC = () => {
   const [isAddingMilestone, setIsAddingMilestone] = useState(false);
   const [newMilestoneInput, setNewMilestoneInput] = useState('');
 
-  // Persist milestones to LocalStorage whenever they change
+  // Persist milestones
   useEffect(() => {
     localStorage.setItem('life-tracker-milestones', JSON.stringify(milestones));
   }, [milestones]);
 
+  // Clock
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
+  const handleOnboardingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName || !formDate) return;
+
+    const combinedDateString = `${formDate}T${formTime}:00`;
+    const newBirthDate = new Date(combinedDateString);
+
+    // Validate date
+    if (isNaN(newBirthDate.getTime())) {
+      alert("Please enter a valid date and time.");
+      return;
+    }
+
+    const newData = { name: formName, birthDate: newBirthDate };
+    setUserData(newData);
+    localStorage.setItem('life-tracker-user-data', JSON.stringify(newData));
+  };
+
+  const handleReset = () => {
+    if (confirm("Are you sure you want to reset your data?")) {
+      localStorage.removeItem('life-tracker-user-data');
+      setUserData(null);
+      setFormName('');
+      setFormDate('');
+      setFormTime('00:00');
+    }
+  };
+
+  const handleEditProfile = () => {
+    if (!userData) return;
+    
+    // Pre-fill form with existing data
+    setFormName(userData.name);
+    
+    // Format date for input type="date" (YYYY-MM-DD)
+    const year = userData.birthDate.getFullYear();
+    const month = String(userData.birthDate.getMonth() + 1).padStart(2, '0');
+    const day = String(userData.birthDate.getDate()).padStart(2, '0');
+    setFormDate(`${year}-${month}-${day}`);
+    
+    // Format time for input type="time" (HH:MM)
+    const hours = String(userData.birthDate.getHours()).padStart(2, '0');
+    const minutes = String(userData.birthDate.getMinutes()).padStart(2, '0');
+    setFormTime(`${hours}:${minutes}`);
+    
+    // Switch to form view
+    setUserData(null);
+  };
+
+  // ---------------------------------------------------------------------------
+  // RENDER: ONBOARDING SCREEN
+  // ---------------------------------------------------------------------------
+  if (!userData) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans selection:bg-teal-200">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 animate-in fade-in zoom-in duration-300">
+          
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-teal-500/20 text-white mb-4">
+              <CalendarIcon className="w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Welcome</h1>
+            <p className="text-slate-500 text-sm font-medium mt-1">Let's set up your life tracker</p>
+          </div>
+
+          <form onSubmit={handleOnboardingSubmit} className="space-y-5">
+            
+            {/* Name Input */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Your Name</label>
+              <div className="relative group">
+                <UserIcon className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. Alex Smith"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder:font-normal"
+                />
+              </div>
+            </div>
+
+            {/* Date Input */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Birth Date</label>
+              <div className="relative group">
+                <CalendarIcon className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+                <input 
+                  type="date" 
+                  required
+                  value={formDate}
+                  onChange={(e) => setFormDate(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Time Input */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Birth Time</label>
+              <div className="relative group">
+                <ClockIcon className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+                <input 
+                  type="time" 
+                  required
+                  value={formTime}
+                  onChange={(e) => setFormTime(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit"
+              className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-teal-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all mt-4"
+            >
+              Start Tracking
+            </button>
+
+            {userData === null && localStorage.getItem('life-tracker-user-data') === null ? null : (
+                <button 
+                    type="button" 
+                    onClick={() => {
+                        // Attempt to restore from local storage if cancelling edit
+                        const saved = localStorage.getItem('life-tracker-user-data');
+                        if (saved) {
+                            const parsed = JSON.parse(saved);
+                            setUserData({ name: parsed.name, birthDate: new Date(parsed.birthDate) });
+                        }
+                    }}
+                    className="w-full text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 py-2"
+                >
+                    Cancel
+                </button>
+            )}
+
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // MAIN APP LOGIC
+  // ---------------------------------------------------------------------------
+
+  const birthDate = userData.birthDate;
   const lastBirthday = getLastBirthday(birthDate);
   const nextBirthday = getNextBirthday(birthDate);
   
@@ -61,24 +235,30 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-900 p-4 md:p-8 font-sans selection:bg-teal-200">
       
       {/* Stylish Header - Wide but Slimmer Height */}
-      <header className="sticky top-2 z-50 max-w-fit mx-auto mb-6 group cursor-default">
+      <header 
+        onClick={handleEditProfile}
+        className="sticky top-2 z-50 max-w-fit mx-auto mb-6 group cursor-pointer"
+        title="Click to edit profile"
+      >
         {/* Animated Glow Effect */}
         <div className="absolute -inset-2 bg-gradient-to-r from-teal-400 via-emerald-400 to-cyan-400 rounded-full blur-md opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
         
         {/* Main Badge Container */}
-        <div className="relative bg-white flex items-center gap-4 px-6 py-3 pr-10 rounded-full shadow-xl shadow-slate-200/60 ring-1 ring-slate-100/80">
+        <div className="relative bg-white flex items-center gap-4 px-6 py-3 pr-10 rounded-full shadow-xl shadow-slate-200/60 ring-1 ring-slate-100/80 transition-transform group-active:scale-95">
            
            {/* Icon - Medium Size */}
-           <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-teal-500/20 text-white shrink-0 group-hover:scale-105 transition-transform duration-300">
-             <CalendarIcon className="w-7 h-7" />
+           <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-teal-500/20 text-white shrink-0 group-hover:scale-105 transition-transform duration-300 relative overflow-hidden">
+             {/* Icon Swap Effect */}
+             <CalendarIcon className="w-7 h-7 absolute transition-all duration-300 transform group-hover:-translate-y-10 group-hover:opacity-0" />
+             <PencilSquareIcon className="w-7 h-7 absolute transition-all duration-300 transform translate-y-10 opacity-0 group-hover:translate-y-0 group-hover:opacity-100" />
            </div>
 
            {/* Text Info */}
            <div className="flex flex-col gap-0.5">
-              <h1 className="text-2xl font-black text-slate-800 tracking-tighter leading-none">Sumon Hossain</h1>
+              <h1 className="text-2xl font-black text-slate-800 tracking-tighter leading-none group-hover:text-teal-600 transition-colors">{userData.name}</h1>
               <div className="flex items-center gap-2">
                  <span className="bg-gradient-to-r from-teal-400 to-emerald-500 text-white text-[10px] font-bold px-3 py-0.5 rounded-full tracking-widest shadow-lg shadow-teal-500/20 uppercase">
-                    25 October 1998
+                    {formatDate(userData.birthDate)}
                  </span>
               </div>
            </div>
@@ -176,8 +356,11 @@ const App: React.FC = () => {
 
       </main>
 
-      <footer className="text-center text-slate-300 text-[10px]">
-        <p>© {new Date().getFullYear()} Sumon Hossain Life Tracker</p>
+      <footer className="text-center text-slate-300 text-[10px] space-y-2">
+        <p>© {new Date().getFullYear()} {userData.name} Life Tracker</p>
+        <button onClick={handleReset} className="text-slate-300 hover:text-red-400 underline underline-offset-2 transition-colors">
+          Reset Data
+        </button>
       </footer>
     </div>
   );

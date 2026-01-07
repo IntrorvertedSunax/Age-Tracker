@@ -130,7 +130,7 @@ const AgeTimer: React.FC<AgeTimerProps> = ({ birthDate, theme }) => {
     <div className="w-full">
       
       {/* Line 1: Header / Present Date Label */}
-      <div className="flex flex-col justify-start items-start mb-2 pb-2 border-b border-slate-100 gap-1">
+      <div className="flex flex-col justify-start items-start mb-1 pb-1 border-b border-slate-100 gap-1">
          <span className={`text-xs md:text-sm font-bold uppercase tracking-widest ${themeColors[theme]}`}>Present Date</span>
          <div className="flex flex-wrap items-baseline">
             <span className="text-lg md:text-xl font-bold text-slate-800">
@@ -140,7 +140,7 @@ const AgeTimer: React.FC<AgeTimerProps> = ({ birthDate, theme }) => {
       </div>
 
       {/* Line 2: Live Age Label */}
-      <div className="flex justify-start w-full mb-1">
+      <div className="flex justify-start w-full mb-0.5">
          <span className={`text-sm md:text-base font-bold uppercase tracking-widest ${themeColors[theme]}`}>Live Age</span>
       </div>
 
@@ -148,7 +148,7 @@ const AgeTimer: React.FC<AgeTimerProps> = ({ birthDate, theme }) => {
       <div className="flex flex-col gap-6 md:gap-8 pb-2">
         
         {/* Years - Filled Circle, White Text, Glow Effect */}
-        <div className="flex flex-col items-center justify-center py-4">
+        <div className="flex flex-col items-center justify-center py-2">
              <div className={`w-32 h-32 md:w-40 md:h-40 rounded-full ${bgColorClass} flex items-center justify-center ${glowClass}`}>
                  <div className="flex flex-col items-center justify-center">
                     <span className="text-5xl md:text-6xl text-white font-black tracking-tighter leading-none mb-1">
